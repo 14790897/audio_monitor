@@ -46,4 +46,6 @@ dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org
 dotnet add package NAudio
 dotnet add package CSCore
 
-dotnet build -c Release -->
+dotnet build -c Release 
+dotnet publish -c Release -r win-x64 --self-contained true -o publish
+-->

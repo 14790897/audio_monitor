@@ -28,7 +28,8 @@ namespace AudioDeviceMonitor
             // 托盘图标
             trayIcon = new NotifyIcon
             {
-                Icon = new Icon("audio_monitor_icon.ico"),
+                // Icon = new Icon("./audio_monitor_icon.ico"), // 使用自定义图标会导致程序无法打开时请注释此行
+                Icon = SystemIcons.Application, // 使用系统默认应用图标，保证兼容性
                 Visible = true,
                 Text = "音频设备监控（双击显示/右键退出）"
             };
