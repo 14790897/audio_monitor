@@ -1,0 +1,40 @@
+# .gitignore for C# WinForms project
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code settings
+.vscode/
+
+# Rider settings
+.idea/
+*.sln.iml
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Publish output
+publish/
+
+# Others
+*.log
+*.vspscc
+*.vssscc
+_ReSharper*/
+
+# Ignore MSIX packaging output
+*.msix
+*.msixbundle
+*.appx
+*.appxbundle
+
+# Ignore test results
+TestResults/
