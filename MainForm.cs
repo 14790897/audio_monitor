@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using CSCore.CoreAudioAPI;
+using Microsoft.Win32;
 
 namespace AudioDeviceMonitor
 {
@@ -15,6 +16,9 @@ namespace AudioDeviceMonitor
         public MainForm()
         {
             InitializeComponent();
+
+            // 设置开机自启动
+            SetAutoStart(true);
 
             // 隐藏主窗口，仅显示托盘图标
             this.ShowInTaskbar = false;
@@ -37,6 +41,12 @@ namespace AudioDeviceMonitor
                 trayIcon.Visible = false;
                 Application.Exit();
             });
+            var disableAutoStartItem = new ToolStripMenuItem("取消开机自启动", null, (s, e) =>
+            {
+                SetAutoStart(false);
+                MessageBox.Show("已取消开机自启动！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            });
+            contextMenu.Items.Add(disableAutoStartItem);
             contextMenu.Items.Add(exitItem);
             trayIcon.ContextMenuStrip = contextMenu;
 
@@ -83,6 +93,24 @@ namespace AudioDeviceMonitor
         {
             // 发送Ctrl+Alt+P
             SendKeys.SendWait("^%p");
+        }
+
+        // 设置开机自启动
+        private void SetAutoStart(bool enable)
+        {
+            string appName = "AudioDeviceMonitor";
+            string exePath = Application.ExecutablePath;
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true))
+            {
+                if (enable)
+                {
+                    key.SetValue(appName, '"' + exePath + '"');
+                }
+                else
+                {
+                    key.DeleteValue(appName, false);
+                }
+            }
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
