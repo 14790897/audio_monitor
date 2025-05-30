@@ -32,8 +32,8 @@ jobs:
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
-          name: audio_monitor_exe
-          path: publish/audio_monitor.exe
+          name: AudioDeviceMonitor
+          path: publish/AudioDeviceMonitor.exe
 
   release:
     needs: build
@@ -42,12 +42,12 @@ jobs:
       - name: Download EXE artifact
         uses: actions/download-artifact@v4
         with:
-          name: audio_monitor_exe
+          name: AudioDeviceMonitor
           path: .
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: audio_monitor.exe
+          files: AudioDeviceMonitor.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
