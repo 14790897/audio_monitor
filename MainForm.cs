@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using CSCore.CoreAudioAPI;
 using Microsoft.Win32;
+using System.Reflection;
 
 namespace AudioDeviceMonitor
 {
@@ -13,9 +14,14 @@ namespace AudioDeviceMonitor
         private string lastDeviceId;
         private NotifyIcon trayIcon;
 
+        // 设备列表控件
+        private ListBox deviceListBox;
+
         public MainForm()
         {
             InitializeComponent();
+
+            Log("程序启动");
 
             // 设置开机自启动
             SetAutoStart(true);
@@ -26,15 +32,22 @@ namespace AudioDeviceMonitor
             this.Visible = false;
 
             // 托盘图标
+            Icon trayIconImage;
+            var asm = Assembly.GetExecutingAssembly();
+            var names = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+            foreach (var name in names)
+                Log("[DEBUG] 资源名: " + name);
+            using (var stream = asm.GetManifestResourceStream("AudioDeviceMonitor.audio_monitor_icon.ico"))
+            {
+                trayIconImage = new Icon(stream);
+            }
             trayIcon = new NotifyIcon
             {
-                                // Icon = new Icon("./audio_monitor_icon.ico"),
-
-                Icon = SystemIcons.Application, // 使用系统默认应用图标
+                Icon = trayIconImage,
                 Visible = true,
                 Text = "音频设备监控（双击显示/右键退出）"
             };
-            trayIcon.DoubleClick += (s, e) => { this.Visible = true; this.WindowState = FormWindowState.Normal; };
+            trayIcon.DoubleClick += (s, e) => { this.Visible = true; this.WindowState = FormWindowState.Normal; RefreshDeviceList(); };
 
             // 使用 ContextMenuStrip 替代 ContextMenu
             var contextMenu = new ContextMenuStrip();
@@ -57,24 +70,42 @@ namespace AudioDeviceMonitor
             deviceEnumerator.DefaultDeviceChanged += OnDefaultDeviceChanged;
 
             lastDeviceId = GetCurrentDefaultDeviceId();
+
+            // 初始化时刷新设备列表
+            RefreshDeviceList();
         }
 
         // 如果没有设计器文件，手动添加空方法
         private void InitializeComponent()
         {
-            // 如果你用设计器生成窗体，这里可以删除
+            this.deviceListBox = new ListBox();
+            this.deviceListBox.Dock = DockStyle.Fill;
+            this.deviceListBox.Font = new System.Drawing.Font("Consolas", 12F);
+            this.Controls.Add(this.deviceListBox);
+            this.Text = "音频设备监控 - 设备列表";
+            this.ClientSize = new System.Drawing.Size(400, 300);
+        }
+
+        private void Log(string message)
+        {
+            string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "audio_monitor.log");
+            string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\r\n";
+            System.IO.File.AppendAllText(logPath, logEntry);
         }
 
         private void OnDefaultDeviceChanged(object sender, DefaultDeviceChangedEventArgs e)
         {
+            Log($"检测到音频设备切换: {e.DataFlow}, {e.Role}");
             if (e.DataFlow == DataFlow.Render && e.Role == Role.Multimedia)
             {
                 string curDeviceId = GetCurrentDefaultDeviceId();
+                Log($"当前设备ID: {curDeviceId}, 上次设备ID: {lastDeviceId}");
                 if (curDeviceId != lastDeviceId)
                 {
                     lastDeviceId = curDeviceId;
                     // 检查网易云音乐是否运行
                     var proc = Process.GetProcessesByName("cloudmusic").FirstOrDefault();
+                    Log(proc != null ? "检测到网易云音乐进程，发送Ctrl+Alt+P" : "未检测到网易云音乐进程");
                     if (proc != null)
                     {
                         SendCtrlAltP();
@@ -111,6 +142,18 @@ namespace AudioDeviceMonitor
                 else
                 {
                     key.DeleteValue(appName, false);
+                }
+            }
+        }
+
+        private void RefreshDeviceList()
+        {
+            deviceListBox.Items.Clear();
+            using (var devices = deviceEnumerator.EnumAudioEndpoints(DataFlow.Render, DeviceState.Active))
+            {
+                foreach (var dev in devices)
+                {
+                    deviceListBox.Items.Add($"{dev.FriendlyName} ({dev.DeviceID})");
                 }
             }
         }

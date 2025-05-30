@@ -47,5 +47,6 @@ dotnet add package NAudio
 dotnet add package CSCore
 
 dotnet build -c Release 
-dotnet publish -c Release -r win-x64 --self-contained true -o publish
+dotnet publish -c Release -r win-x64 --self-contained true -o publish 
+C:\git-program\audio_monitor\publish
 -->
