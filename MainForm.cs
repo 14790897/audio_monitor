@@ -158,6 +158,19 @@ namespace AudioDeviceMonitor
             }
         }
 
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            // 如果是用户点击关闭按钮（X），则隐藏到托盘而不是退出
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                this.Visible = false;
+                this.WindowState = FormWindowState.Minimized;
+                return;
+            }
+            base.OnFormClosing(e);
+        }
+
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             trayIcon.Visible = false;
